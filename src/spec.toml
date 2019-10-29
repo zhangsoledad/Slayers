@@ -1,0 +1,60 @@
+name = "ckb"
+
+[genesis]
+version = 0
+parent_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+timestamp = { timestamp }
+compact_target = {compact_target }
+uncles_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+nonce = "0x0"
+
+
+[genesis.genesis_cell]
+message = { message }
+
+[genesis.genesis_cell.lock]
+code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+args = "0x"
+hash_type = "data"
+
+# An array list paths to system cell files, which is absolute or relative to
+# the directory containing this config file.
+[[genesis.system_cells]]
+file = \{ bundled = "specs/cells/secp256k1_blake160_sighash_all" }
+create_type_id = true
+[[genesis.system_cells]]
+file = \{ bundled = "specs/cells/dao" }
+create_type_id = true
+[[genesis.system_cells]]
+file = \{ bundled = "specs/cells/secp256k1_data" }
+create_type_id = false
+
+[genesis.system_cells_lock]
+code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+args = "0x"
+hash_type = "data"
+
+# Dep group cells
+[genesis.dep_groups]
+secp256k1_blake160_sighash_all = [
+  \{ bundled = "specs/cells/secp256k1_data" },
+  \{ bundled = "specs/cells/secp256k1_blake160_sighash_all" },
+]
+
+# For first 11 block
+[genesis.bootstrap_lock]
+code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+args = "0x"
+hash_type = "type"
+
+# Locks for developers to run tests
+{{ for issued_cell in issued_cells }}
+[[genesis.issued_cells]]
+capacity =  { issued_cell.capacity }
+lock.code_hash = "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8"
+lock.args = { issued_cell.args }
+lock.hash_type = { issued_cell.hash_type }
+{{ endfor }}
+
+[pow]
+func = "Eaglesong"
