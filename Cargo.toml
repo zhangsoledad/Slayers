@@ -13,5 +13,9 @@ serde_derive = "1.0"
 csv = "1.1"
 failure = "0.1"
 ckb-types = { git = "https://github.com/nervosnetwork/ckb" }
+ckb-jsonrpc-types = { git = "https://github.com/nervosnetwork/ckb" }
 bech32 = "0.7.1"
 clap = {version = "2.33.0", features = ["yaml"]}
+reqwest = "0.9"
+lazy_static = "1.4.0"
+serde_json = "1.0"

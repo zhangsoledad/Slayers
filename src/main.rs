@@ -1,6 +1,8 @@
 mod address;
 mod aggregate;
+mod explorer;
 mod input;
+mod rpc;
 mod template;
 
 use aggregate::reduce_sig_record;
