@@ -8,11 +8,10 @@ pub struct Spec {
     pub issued_cells: Vec<IssuedCell>,
 }
 
-
 #[derive(Serialize)]
 pub struct IssuedCell {
     pub capacity: u64,
     pub code_hash: String,
-    pub args: Vec<String>,
+    pub args: String,
     pub hash_type: String,
 }
