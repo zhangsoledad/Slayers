@@ -1,5 +1,4 @@
 use crate::rpc::RpcClient;
-use crate::template::IssuedCell;
 use ckb_types::{
     bytes::Bytes,
     core::{capacity_bytes, BlockView, Capacity, Ratio},
@@ -7,6 +6,7 @@ use ckb_types::{
     prelude::*,
 };
 use failure::Error;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::process::exit;
 
@@ -19,15 +19,14 @@ pub struct Explorer {
 }
 
 impl Explorer {
-    pub fn new(url: Option<String>, target: u64) -> Explorer {
-        let url = url.unwrap_or_else(|| "http://127.0.0.1:8114".to_string());
+    pub fn new(url: &str, target: u64) -> Explorer {
         Explorer {
-            rpc: RpcClient::new(&url),
+            rpc: RpcClient::new(url),
             target,
         }
     }
 
-    fn collect(&self, map: &mut BTreeMap<Bytes, Capacity>) -> Result<(), Error> {
+    pub fn collect(&self, map: &mut BTreeMap<Bytes, Capacity>) -> Result<(), Error> {
         if self.rpc.get_tip_block_number()?.value() < self.target + 11 {
             eprintln!("Lina is not ready yet.");
             exit(0);
@@ -36,7 +35,15 @@ impl Explorer {
         let mut rewards = HashMap::with_capacity(42);
         let mut windows = VecDeque::with_capacity(10);
 
+        let progress_bar = ProgressBar::new(self.target + 10);
+        progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:60.cyan/blue} {pos:>7}/{len:7} {msg}")
+                .progress_chars("##-"),
+        );
+
         for num in 1..11 {
+            progress_bar.inc(1);
             if let Some(block) = self.rpc.get_block_by_number(num.into())? {
                 let block: BlockView = block.into();
                 windows.push_back(block);
@@ -46,8 +53,8 @@ impl Explorer {
         }
 
         let mut cursor = 12;
-
         while cursor <= self.target + 11 {
+            progress_bar.inc(1);
             if let Some(block) = self.rpc.get_block_by_number(cursor.into())? {
                 let block: BlockView = block.into();
                 windows.push_back(block);
@@ -87,12 +94,13 @@ impl Explorer {
             .try_fold(Capacity::zero(), Capacity::safe_add)?;
 
         for (lock, capacity) in rewards {
-            let reward = total.safe_mul_ratio(Ratio(capacity.as_u64(), total.as_u64()))?;
+            let reward = TOTAL_REWARD.safe_mul_ratio(Ratio(capacity.as_u64(), total.as_u64()))?;
             let entry = map
                 .entry(lock.args().raw_data())
                 .or_insert_with(Capacity::zero);
             *entry = entry.safe_add(reward)?;
         }
+        progress_bar.finish();
         Ok(())
     }
 }

@@ -6,16 +6,15 @@ mod template;
 
 use ckb_types::{bytes::Bytes, core::Capacity};
 use clap::{load_yaml, value_t, App};
+use explorer::Explorer;
 use input::parse_mining_competition_record;
 use std::collections::BTreeMap;
-use std::error::Error;
-use std::fs::File;
-use std::io::{prelude::*, BufReader};
-use std::path::{Path, PathBuf};
+use std::io::BufReader;
+use std::process::exit;
 use template::{IssuedCell, Spec};
 use tinytemplate::TinyTemplate;
 
-static TEMPLATE: &'static str = include_str!("spec.toml");
+static TEMPLATE: &str = include_str!("spec.toml");
 const SIG_CODE_HASH: &str = "0x";
 
 fn main() {
@@ -24,13 +23,23 @@ fn main() {
 
     let mut records = BTreeMap::new();
     load_mining_competition_records(&mut records);
-    let issued_cells = reduce(records);
 
+    let url = matches
+        .value_of("url")
+        .unwrap_or_else(|| "http://127.0.0.1:8114");
+    let target = value_t!(matches, "target", u64).unwrap_or_else(|e| e.exit());
+    let explorer = Explorer::new(url, target);
+    explorer.collect(&mut records).unwrap_or_else(|e| {
+        eprintln!("explorer error: {}", e);
+        exit(1);
+    });
+
+    let issued_cells = reduce(records);
     let context = Spec {
         timestamp: 0,
         compact_target: "0x1".to_string(),
         message: "test".to_string(),
-        issued_cells: issued_cells,
+        issued_cells,
     };
 
     let mut tt = TinyTemplate::new();

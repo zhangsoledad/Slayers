@@ -1,5 +1,5 @@
 use bech32::{self, FromBase32};
-use ckb_types::{bytes::Bytes, core::ScriptHashType, packed::Script, prelude::*, H160, H256};
+use ckb_types::bytes::Bytes;
 use failure::{Error, Fail};
 use std::fmt;
 

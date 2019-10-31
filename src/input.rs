@@ -1,5 +1,5 @@
 use crate::address::Address;
-use ckb_types::{bytes::Bytes, core::Capacity, H160};
+use ckb_types::{bytes::Bytes, core::Capacity};
 use failure::Error;
 use serde_derive::Deserialize;
 use std::collections::BTreeMap;
@@ -7,7 +7,7 @@ use std::convert::{TryFrom, TryInto};
 use std::io::Read;
 use std::process::exit;
 
-pub struct H264([u8; 33]);
+// pub struct H264([u8; 33]);
 
 const BYTE_SHANNONS: u64 = 100_000_000;
 
@@ -17,42 +17,42 @@ pub struct RawRecord1 {
     pub capacity: u64,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct RawRecord2 {
-    pub pubkey: String,
-    pub since: u64,
-    pub capacity: u64,
-}
+// #[derive(Debug, Deserialize)]
+// pub struct RawRecord2 {
+//     pub pubkey: String,
+//     pub since: u64,
+//     pub capacity: u64,
+// }
 
-#[derive(Debug, Deserialize)]
-pub struct RawRecord3 {
-    pub pubkeys: String,
-    pub require_first_n: u64,
-    pub threshold: u64,
-    pub capacity: u64,
-}
+// #[derive(Debug, Deserialize)]
+// pub struct RawRecord3 {
+//     pub pubkeys: String,
+//     pub require_first_n: u64,
+//     pub threshold: u64,
+//     pub capacity: u64,
+// }
 
-#[derive(Debug, Deserialize)]
-pub struct RawRecord4 {
-    pub pubkeys: String,
-    pub require_first_n: u64,
-    pub threshold: u64,
-    pub since: u64,
-    pub capacity: u64,
-}
+// #[derive(Debug, Deserialize)]
+// pub struct RawRecord4 {
+//     pub pubkeys: String,
+//     pub require_first_n: u64,
+//     pub threshold: u64,
+//     pub since: u64,
+//     pub capacity: u64,
+// }
 
 pub struct SigScriptRecord {
     pub args: Bytes,
     pub capacity: Capacity,
 }
 
-pub struct MulSigScriptRecord {
-    pub pubkeys: Vec<H264>,
-    pub require_first_n: u64,
-    pub threshold: u64,
-    pub since: u64,
-    pub capacity: Capacity,
-}
+// pub struct MulSigScriptRecord {
+//     pub pubkeys: Vec<H264>,
+//     pub require_first_n: u64,
+//     pub threshold: u64,
+//     pub since: u64,
+//     pub capacity: Capacity,
+// }
 
 pub fn parse_mining_competition_record<R: Read>(reader: R, map: &mut BTreeMap<Bytes, Capacity>) {
     let mut rdr = csv::Reader::from_reader(reader);

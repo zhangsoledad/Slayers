@@ -2,3 +2,18 @@ name: Slayers
 version: "1.0"
 author: zhangsoledad <787953403@qq.com>
 about: Lina Inverse - Slayers
+settings:
+    - ArgRequiredElseHelp
+args:
+    - url:
+        short: u
+        long: url
+        value_name: URL
+        help: ckb node rpc endpoint
+        takes_value: true
+    - target:
+        short: t
+        long: target
+        value_name: TARGET
+        help: target number
+        takes_value: true
