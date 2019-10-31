@@ -37,5 +37,6 @@ jsonrpc!(pub struct RpcClient {
     pub fn get_current_epoch(&self) -> EpochView;
     pub fn get_epoch_by_number(&self, number: EpochNumber) -> Option<EpochView>;
     pub fn local_node_info(&self) -> Node;
+    pub fn get_cellbase_output_capacity_details(&self, _hash: H256) -> Option<BlockReward>;
     pub fn get_blockchain_info(&self) -> ChainInfo;
 });

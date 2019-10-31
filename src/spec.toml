@@ -10,7 +10,7 @@ nonce = "0x0"
 
 
 [genesis.genesis_cell]
-message = { message }
+message = "{ message }"
 
 [genesis.genesis_cell.lock]
 code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"

@@ -1,5 +1,5 @@
 use bech32::{self, FromBase32};
-use ckb_types::{core::ScriptHashType, packed::Script, prelude::*, H160, H256};
+use ckb_types::{bytes::Bytes, core::ScriptHashType, packed::Script, prelude::*, H160, H256};
 use failure::{Error, Fail};
 use std::fmt;
 
@@ -7,7 +7,7 @@ const PREFIX: &str = "ckt";
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
 pub struct Address {
-    pub args: H160,
+    pub args: Bytes,
 }
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone, Fail)]
@@ -20,7 +20,7 @@ impl fmt::Display for AddressError {
 }
 
 impl Address {
-    pub fn new(args: H160) -> Address {
+    pub fn new(args: Bytes) -> Address {
         Address { args }
     }
 
@@ -39,16 +39,12 @@ impl Address {
                 // SECP256K1 + blake160
                 return Err(AddressError(format!("Invalid code hash index: {}", data[1])).into());
             }
-            H160::from_slice(&data[2..22])
-                .map(Address::new)
-                .map_err(Into::into)
+            Ok(Address::new(Bytes::from(&data[2..22])))
         } else if data.len() == 25 {
             if &data[0..5] != b"\x01P2PH" {
                 return Err(AddressError(format!("Invalid format type: {:?}", &data[0..5])).into());
             }
-            H160::from_slice(&data[5..25])
-                .map(Address::new)
-                .map_err(Into::into)
+            Ok(Address::new(Bytes::from(&data[5..25])))
         } else {
             Err(AddressError(format!("Invalid Address data length: {}", data.len())).into())
         }

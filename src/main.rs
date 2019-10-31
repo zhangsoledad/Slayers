@@ -1,35 +1,30 @@
 mod address;
-mod aggregate;
 mod explorer;
 mod input;
 mod rpc;
 mod template;
 
-use aggregate::reduce_sig_record;
+use ckb_types::{bytes::Bytes, core::Capacity};
 use clap::{load_yaml, value_t, App};
-use input::parse_record1;
+use input::parse_mining_competition_record;
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 use template::{IssuedCell, Spec};
 use tinytemplate::TinyTemplate;
 
 static TEMPLATE: &'static str = include_str!("spec.toml");
+const SIG_CODE_HASH: &str = "0x";
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
-    let records = value_t!(matches.value_of("records"), PathBuf).unwrap_or_else(|e| e.exit());
-    println!("records path: {:?}", records);
-
-    let issued_cells = get_records(records);
-    println!("issued_cells len: {:?}", issued_cells.len());
-
-    let mut tt = TinyTemplate::new();
-    tt.add_template("lina", TEMPLATE).unwrap();
+    let mut records = BTreeMap::new();
+    load_mining_competition_records(&mut records);
+    let issued_cells = reduce(records);
 
     let context = Spec {
         timestamp: 0,
@@ -38,14 +33,63 @@ fn main() {
         issued_cells: issued_cells,
     };
 
+    let mut tt = TinyTemplate::new();
+    tt.add_template("lina", TEMPLATE).unwrap();
     let rendered = tt.render("lina", &context).unwrap();
     println!("{}", rendered);
 }
 
-fn get_records<P: AsRef<Path>>(path: P) -> Vec<IssuedCell> {
-    let f = File::open(path).unwrap_or_else(|e| panic!("Error: {}", e.description()));
-    let reader = BufReader::new(f);
-    let record = parse_record1(reader);
-    println!("record len: {:?}", record.len());
-    reduce_sig_record(record)
+fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>) {
+    {
+        let round1 = include_bytes!("input/round1.csv");
+        let reader = BufReader::new(&round1[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round2_epoch = include_bytes!("input/round2.epoch.csv");
+        let reader = BufReader::new(&round2_epoch[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round2_mininng = include_bytes!("input/round2.mining.csv");
+        let reader = BufReader::new(&round2_mininng[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round3_epoch = include_bytes!("input/round3.epoch.csv");
+        let reader = BufReader::new(&round3_epoch[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round3_mininng = include_bytes!("input/round3.mining.csv");
+        let reader = BufReader::new(&round3_mininng[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round4 = include_bytes!("input/round4.csv");
+        let reader = BufReader::new(&round4[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round5_stage1 = include_bytes!("input/round5.stage1.csv");
+        let reader = BufReader::new(&round5_stage1[..]);
+        parse_mining_competition_record(reader, map);
+    }
+}
+
+fn reduce(map: BTreeMap<Bytes, Capacity>) -> Vec<IssuedCell> {
+    map.into_iter()
+        .map(|(args, capacity)| IssuedCell {
+            capacity: capacity.as_u64(),
+            code_hash: SIG_CODE_HASH.to_string(),
+            args: format!("0x{}", faster_hex::hex_string(&args[..]).unwrap()),
+            hash_type: "type".to_string(),
+        })
+        .collect()
 }

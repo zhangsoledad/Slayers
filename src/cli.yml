@@ -2,12 +2,3 @@ name: Slayers
 version: "1.0"
 author: zhangsoledad <787953403@qq.com>
 about: Lina Inverse - Slayers
-settings:
-    - ArgRequiredElseHelp
-args:
-    - records:
-        short: r
-        long: records
-        value_name: FILE
-        help: history records file
-        takes_value: true

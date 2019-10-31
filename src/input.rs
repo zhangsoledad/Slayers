@@ -1,9 +1,11 @@
 use crate::address::Address;
-use ckb_types::{core::Capacity, H160};
+use ckb_types::{bytes::Bytes, core::Capacity, H160};
 use failure::Error;
 use serde_derive::Deserialize;
+use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::Read;
+use std::process::exit;
 
 pub struct H264([u8; 33]);
 
@@ -38,7 +40,7 @@ pub struct RawRecord4 {
 }
 
 pub struct SigScriptRecord {
-    pub args: H160,
+    pub args: Bytes,
     pub capacity: Capacity,
 }
 
@@ -50,11 +52,22 @@ pub struct MulSigScriptRecord {
     pub capacity: Capacity,
 }
 
-pub fn parse_record1<R: Read>(reader: R) -> Vec<SigScriptRecord> {
+pub fn parse_mining_competition_record<R: Read>(reader: R, map: &mut BTreeMap<Bytes, Capacity>) {
     let mut rdr = csv::Reader::from_reader(reader);
-    rdr.deserialize()
+    let records: Vec<SigScriptRecord> = rdr
+        .deserialize()
         .filter_map(|record: Result<RawRecord1, _>| record.ok().and_then(|r| r.try_into().ok()))
-        .collect()
+        .collect();
+
+    for record in records {
+        let SigScriptRecord { args, capacity } = record;
+        let entry = map.entry(args.clone()).or_insert_with(Capacity::zero);
+
+        *entry = entry.safe_add(capacity).unwrap_or_else(|e| {
+            eprintln!("Warn: record capacity reduce overflow: {}", e);
+            exit(1);
+        });
+    }
 }
 
 impl TryFrom<RawRecord1> for SigScriptRecord {

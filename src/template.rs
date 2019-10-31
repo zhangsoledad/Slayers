@@ -1,6 +1,6 @@
 use serde_derive::Serialize;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct Spec {
     pub timestamp: u64,
     pub compact_target: String,
@@ -8,7 +8,7 @@ pub struct Spec {
     pub issued_cells: Vec<IssuedCell>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct IssuedCell {
     pub capacity: u64,
     pub code_hash: String,
