@@ -51,9 +51,9 @@ hash_type = "type"
 {{ for issued_cell in issued_cells }}
 [[genesis.issued_cells]]
 capacity =  { issued_cell.capacity }
-lock.code_hash = { issued_cell.code_hash }
-lock.args = { issued_cell.args }
-lock.hash_type = { issued_cell.hash_type }
+lock.code_hash = "{ issued_cell.code_hash }"
+lock.args = "{ issued_cell.args }"
+lock.hash_type = "{ issued_cell.hash_type }"
 {{ endfor }}
 
 [pow]
