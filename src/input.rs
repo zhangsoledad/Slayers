@@ -9,6 +9,8 @@ use std::process::exit;
 
 pub struct H264([u8; 33]);
 
+const BYTE_SHANNONS: u64 = 100_000_000;
+
 #[derive(Debug, Deserialize)]
 pub struct RawRecord1 {
     pub address: String,
@@ -77,7 +79,7 @@ impl TryFrom<RawRecord1> for SigScriptRecord {
         let address = Address::from_str(&record.address)?;
         Ok(SigScriptRecord {
             args: address.args,
-            capacity: Capacity::shannons(record.capacity),
+            capacity: Capacity::shannons(record.capacity * BYTE_SHANNONS),
         })
     }
 }
