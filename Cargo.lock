@@ -1396,6 +1396,7 @@ version = "0.1.0"
 dependencies = [
  "bech32 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ckb-jsonrpc-types 0.23.0 (git+https://github.com/nervosnetwork/ckb)",
+ "ckb-rational 0.23.0 (git+https://github.com/nervosnetwork/ckb)",
  "ckb-types 0.23.0 (git+https://github.com/nervosnetwork/ckb)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",

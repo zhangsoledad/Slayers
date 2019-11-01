@@ -16,6 +16,7 @@ use tinytemplate::TinyTemplate;
 
 static TEMPLATE: &str = include_str!("spec.toml");
 const SIG_CODE_HASH: &str = "0x";
+const TARGET_EPOCH: u64 = 89;
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -27,18 +28,19 @@ fn main() {
     let url = matches
         .value_of("url")
         .unwrap_or_else(|| "http://127.0.0.1:8114");
-    let target = value_t!(matches, "target", u64).unwrap_or_else(|e| e.exit());
+    let target = value_t!(matches, "target", u64).unwrap_or(TARGET_EPOCH);
     let explorer = Explorer::new(url, target);
-    explorer.collect(&mut records).unwrap_or_else(|e| {
+    let (timestamp, message) = explorer.collect(&mut records).unwrap_or_else(|e| {
         eprintln!("explorer error: {}", e);
         exit(1);
     });
 
     let issued_cells = reduce(records);
+
     let context = Spec {
-        timestamp: 0,
+        timestamp,
         compact_target: "0x1".to_string(),
-        message: "test".to_string(),
+        message: format!("{:x}", message),
         issued_cells,
     };
 

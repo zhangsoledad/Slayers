@@ -3,7 +3,7 @@ mod id_generator;
 mod macros;
 mod error;
 
-use ckb_jsonrpc_types::{BlockNumber, BlockReward, BlockView};
+use ckb_jsonrpc_types::{BlockNumber, BlockReward, BlockView, EpochNumber, EpochView, HeaderView};
 use ckb_types::H256;
 use lazy_static::lazy_static;
 
@@ -18,6 +18,7 @@ lazy_static! {
 jsonrpc!(pub struct RpcClient {
     pub fn get_block_by_number(&self, _number: BlockNumber) -> Option<BlockView>;
     pub fn get_block_hash(&self, _number: BlockNumber) -> Option<H256>;
-    pub fn get_tip_block_number(&self) -> BlockNumber;
     pub fn get_cellbase_output_capacity_details(&self, _hash: H256) -> Option<BlockReward>;
+    pub fn get_tip_header(&self) -> HeaderView;
+    pub fn get_epoch_by_number(&self, number: EpochNumber) -> Option<EpochView>;
 });

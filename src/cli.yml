@@ -2,8 +2,6 @@ name: Slayers
 version: "1.0"
 author: zhangsoledad <787953403@qq.com>
 about: Lina Inverse - Slayers
-settings:
-    - ArgRequiredElseHelp
 args:
     - url:
         short: u
@@ -15,5 +13,5 @@ args:
         short: t
         long: target
         value_name: TARGET
-        help: target number
+        help: target epoch number
         takes_value: true
