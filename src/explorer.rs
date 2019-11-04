@@ -5,15 +5,19 @@ use ckb_types::{
     core::{capacity_bytes, BlockView, Capacity, HeaderView},
     packed::{Byte32, CellbaseWitness},
     prelude::*,
+    utilities::{compact_to_difficulty, difficulty_to_compact},
     U256,
 };
 use failure::Error;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::process::exit;
+use std::ops::Add;
 
 const TOTAL_REWARD: Capacity = capacity_bytes!(18_000_000);
 const THRESHOLD: Capacity = capacity_bytes!(1_000);
+const METRIC_EPOCH: u64 = 4;
+const DIFF_FACTOR: u64 = 2;
 
 pub struct Explorer {
     rpc: RpcClient,
@@ -28,7 +32,10 @@ impl Explorer {
         }
     }
 
-    pub fn collect(&self, map: &mut BTreeMap<Bytes, Capacity>) -> Result<(u64, Byte32), Error> {
+    pub fn collect(
+        &self,
+        map: &mut BTreeMap<Bytes, Capacity>,
+    ) -> Result<(u64, u32, Byte32), Error> {
         let tip_header: HeaderView = self.rpc.get_tip_header()?.into();
         let tip_epoch = tip_header.epoch();
         if (tip_epoch.number() < (self.target + 1)) || tip_epoch.index() < 11 {
@@ -36,14 +43,14 @@ impl Explorer {
             exit(0);
         }
 
-        let netx_epoch = self
+        let next_epoch = self
             .rpc
             .get_epoch_by_number((self.target + 1).into())?
             .unwrap_or_else(|| exit(0));
 
-        let netx_epoch_start: u64 = netx_epoch.start_number.into();
+        let next_epoch_start: u64 = next_epoch.start_number.into();
 
-        let endpoint = netx_epoch_start - 1;
+        let endpoint = next_epoch_start - 1;
         println!("Explorer endpoint {}", endpoint);
 
         let mut rewards = HashMap::with_capacity(42);
@@ -110,6 +117,8 @@ impl Explorer {
             .map(|(_, capacity)| *capacity)
             .try_fold(Capacity::zero(), Capacity::safe_add)?;
 
+        let reward_ratio = total.as_u64() / TOTAL_REWARD.as_u64();
+
         for (lock, capacity) in rewards {
             let ratio =
                 RationalU256::new(U256::from(capacity.as_u64()), U256::from(total.as_u64()));
@@ -120,8 +129,26 @@ impl Explorer {
                 .or_insert_with(Capacity::zero);
             *entry = entry.safe_add(get_low64(&reward))?;
         }
+
+        let avg_diff: U256 = (0..METRIC_EPOCH)
+            .map(|i| {
+                let epoch = self
+                    .rpc
+                    .get_epoch_by_number((self.target - i).into())
+                    .unwrap_or_else(|_| exit(0))
+                    .unwrap_or_else(|| exit(0));
+
+                compact_to_difficulty(epoch.compact_target.into())
+            })
+            .fold(U256::zero(), U256::add)
+            / U256::from(METRIC_EPOCH);
+
+        let diff = avg_diff *  U256::from(reward_ratio) *  U256::from(DIFF_FACTOR);
+
+        let compact_target = difficulty_to_compact(diff);
+
         progress_bar.finish();
-        Ok((chosen_one.timestamp(), chosen_one.hash()))
+        Ok((chosen_one.timestamp(), compact_target, chosen_one.hash()))
     }
 }
 

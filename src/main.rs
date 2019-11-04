@@ -30,7 +30,7 @@ fn main() {
         .unwrap_or_else(|| "http://127.0.0.1:8114");
     let target = value_t!(matches, "target", u64).unwrap_or(TARGET_EPOCH);
     let explorer = Explorer::new(url, target);
-    let (timestamp, message) = explorer.collect(&mut records).unwrap_or_else(|e| {
+    let (timestamp, compact_target, message) = explorer.collect(&mut records).unwrap_or_else(|e| {
         eprintln!("explorer error: {}", e);
         exit(1);
     });
@@ -39,7 +39,7 @@ fn main() {
 
     let context = Spec {
         timestamp,
-        compact_target: "0x1".to_string(),
+        compact_target: format!("0x{:x}", compact_target),
         message: format!("{:x}", message),
         issued_cells,
     };
