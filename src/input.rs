@@ -12,33 +12,16 @@ use std::process::exit;
 const BYTE_SHANNONS: u64 = 100_000_000;
 
 #[derive(Debug, Deserialize)]
-pub struct RawRecord1 {
+pub struct RawRecord {
     pub address: String,
     pub capacity: u64,
 }
 
 // #[derive(Debug, Deserialize)]
-// pub struct RawRecord2 {
-//     pub pubkey: String,
-//     pub since: u64,
+// pub struct LockRecord {
+//     pub address: String,
 //     pub capacity: u64,
-// }
-
-// #[derive(Debug, Deserialize)]
-// pub struct RawRecord3 {
-//     pub pubkeys: String,
-//     pub require_first_n: u64,
-//     pub threshold: u64,
-//     pub capacity: u64,
-// }
-
-// #[derive(Debug, Deserialize)]
-// pub struct RawRecord4 {
-//     pub pubkeys: String,
-//     pub require_first_n: u64,
-//     pub threshold: u64,
-//     pub since: u64,
-//     pub capacity: u64,
+//     pub date: u64,
 // }
 
 pub struct SigScriptRecord {
@@ -47,10 +30,7 @@ pub struct SigScriptRecord {
 }
 
 // pub struct MulSigScriptRecord {
-//     pub pubkeys: Vec<H264>,
-//     pub require_first_n: u64,
-//     pub threshold: u64,
-//     pub since: u64,
+//     pub args: Bytes,
 //     pub capacity: Capacity,
 // }
 
@@ -58,7 +38,7 @@ pub fn parse_mining_competition_record<R: Read>(reader: R, map: &mut BTreeMap<By
     let mut rdr = csv::Reader::from_reader(reader);
     let records: Vec<SigScriptRecord> = rdr
         .deserialize()
-        .filter_map(|record: Result<RawRecord1, _>| record.ok().and_then(|r| r.try_into().ok()))
+        .filter_map(|record: Result<RawRecord, _>| record.ok().and_then(|r| r.try_into().ok()))
         .collect();
 
     for record in records {
@@ -72,10 +52,10 @@ pub fn parse_mining_competition_record<R: Read>(reader: R, map: &mut BTreeMap<By
     }
 }
 
-impl TryFrom<RawRecord1> for SigScriptRecord {
+impl TryFrom<RawRecord> for SigScriptRecord {
     type Error = Error;
 
-    fn try_from(record: RawRecord1) -> Result<Self, Self::Error> {
+    fn try_from(record: RawRecord) -> Result<Self, Self::Error> {
         let address = Address::from_str(&record.address)?;
         Ok(SigScriptRecord {
             args: address.args,

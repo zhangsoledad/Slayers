@@ -11,8 +11,8 @@ use ckb_types::{
 use failure::Error;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::process::exit;
 use std::ops::Add;
+use std::process::exit;
 
 const TOTAL_REWARD: Capacity = capacity_bytes!(18_000_000);
 const THRESHOLD: Capacity = capacity_bytes!(1_000);
@@ -143,7 +143,7 @@ impl Explorer {
             .fold(U256::zero(), U256::add)
             / U256::from(METRIC_EPOCH);
 
-        let diff = avg_diff *  U256::from(reward_ratio) *  U256::from(DIFF_FACTOR);
+        let diff = avg_diff * U256::from(reward_ratio) * U256::from(DIFF_FACTOR);
 
         let compact_target = difficulty_to_compact(diff);
 
