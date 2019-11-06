@@ -47,8 +47,7 @@ code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 args = "0x"
 hash_type = "type"
 
-# Satoshi cell, used to adjust dao issuerance.
-# 60% capacity of this cell is occupied.
+# Burn
 [[genesis.issued_cells]]
 capacity = 8_400_000_000_00000000
 lock.code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"

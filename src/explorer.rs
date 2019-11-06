@@ -115,8 +115,6 @@ impl Explorer {
             .map(|(_, capacity)| *capacity)
             .try_fold(Capacity::zero(), Capacity::safe_add)?;
 
-        let reward_ratio = total.as_u64() / TOTAL_REWARD.as_u64();
-
         for (lock, capacity) in rewards {
             let ratio =
                 RationalU256::new(U256::from(capacity.as_u64()), U256::from(total.as_u64()));
@@ -143,7 +141,8 @@ impl Explorer {
             .fold(U256::zero(), U256::add)
             / U256::from(METRIC_EPOCH);
 
-        let diff = avg_diff * U256::from(reward_ratio) * U256::from(3u64) / U256::from(2u64);
+        let diff = (avg_diff * U256::from(3u64) / U256::from(2u64)) * U256::from(total.as_u64())
+            / U256::from(TOTAL_REWARD.as_u64());
 
         let compact_target = difficulty_to_compact(diff);
 
