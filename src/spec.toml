@@ -10,7 +10,7 @@ nonce = "0x0"
 
 
 [genesis.genesis_cell]
-message = "{ message }"
+message = "lina { message }"
 
 [genesis.genesis_cell.lock]
 code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -55,6 +55,14 @@ lock.code_hash = "{ issued_cell.code_hash }"
 lock.args = "{ issued_cell.args }"
 lock.hash_type = "{ issued_cell.hash_type }"
 {{ endfor }}
+
+# Satoshi cell, used to adjust dao issuerance.
+# 60% capacity of this cell is occupied.
+[[genesis.issued_cells]]
+capacity = 50_000_000_00000000
+lock.code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+lock.args = "0x62e907b15cbf27d5425399ebf6f0fb50ebb88f18"
+lock.hash_type = "data"
 
 [pow]
 func = "Eaglesong"

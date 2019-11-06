@@ -17,7 +17,6 @@ use std::process::exit;
 const TOTAL_REWARD: Capacity = capacity_bytes!(18_000_000);
 const THRESHOLD: Capacity = capacity_bytes!(1_000);
 const METRIC_EPOCH: u64 = 4;
-const DIFF_FACTOR: u64 = 2;
 
 pub struct Explorer {
     rpc: RpcClient,
@@ -143,7 +142,7 @@ impl Explorer {
             .fold(U256::zero(), U256::add)
             / U256::from(METRIC_EPOCH);
 
-        let diff = avg_diff * U256::from(reward_ratio) * U256::from(DIFF_FACTOR);
+        let diff = avg_diff * U256::from(reward_ratio) * U256::from(3) / U256::from(2);
 
         let compact_target = difficulty_to_compact(diff);
 
