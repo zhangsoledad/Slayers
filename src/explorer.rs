@@ -34,7 +34,7 @@ impl Explorer {
     pub fn collect(
         &self,
         map: &mut BTreeMap<Bytes, Capacity>,
-    ) -> Result<(u64, u32, Byte32), Error> {
+    ) -> Result<(u64, u32, Byte32, u64), Error> {
         let tip_header: HeaderView = self.rpc.get_tip_header()?.into();
         let tip_epoch = tip_header.epoch();
         if (tip_epoch.number() < (self.target + 1)) || tip_epoch.index() < 11 {
@@ -50,7 +50,6 @@ impl Explorer {
         let next_epoch_start: u64 = next_epoch.start_number.into();
 
         let endpoint = next_epoch_start - 1;
-        println!("Explorer endpoint {}", endpoint);
 
         let mut rewards = HashMap::with_capacity(42);
         let mut windows = VecDeque::with_capacity(10);
@@ -129,25 +128,32 @@ impl Explorer {
             *entry = entry.safe_add(get_low64(&reward))?;
         }
 
-        let avg_diff: U256 = (0..METRIC_EPOCH)
+        let epochs: Vec<_> = (0..METRIC_EPOCH)
             .map(|i| {
-                let epoch = self
-                    .rpc
+                self.rpc
                     .get_epoch_by_number((self.target - i).into())
                     .unwrap_or_else(|_| exit(0))
-                    .unwrap_or_else(|| exit(0));
-
-                compact_to_difficulty(epoch.compact_target.into())
+                    .unwrap_or_else(|| exit(0))
             })
+            .collect();
+
+        let avg_diff: U256 = epochs
+            .iter()
+            .map(|epoch| compact_to_difficulty(epoch.compact_target.into()))
             .fold(U256::zero(), U256::add)
             / U256::from(METRIC_EPOCH);
 
-        let diff = avg_diff * U256::from(reward_ratio) * U256::from(3) / U256::from(2);
+        let diff = avg_diff * U256::from(reward_ratio) * U256::from(3u64) / U256::from(2u64);
 
         let compact_target = difficulty_to_compact(diff);
 
         progress_bar.finish();
-        Ok((chosen_one.timestamp(), compact_target, chosen_one.hash()))
+        Ok((
+            chosen_one.timestamp(),
+            compact_target,
+            chosen_one.hash(),
+            epochs[0].length.into(),
+        ))
     }
 }
 

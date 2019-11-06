@@ -23,9 +23,9 @@ impl Outset {
 
     pub fn since_epoch(&self, date: &DateTime<Utc>, target: u64) -> u64 {
         let since = self.since(date);
-        let epoch = (since / EPOCH_DURATION) - (target - 89);
+        let offset = (since / EPOCH_DURATION) + 89;
+        let epoch = if target >= 89 { offset - 89 } else { 0 };
         let index = (since % EPOCH_DURATION) * 1800 / EPOCH_DURATION;
-
         EpochNumberWithFraction::new(epoch, index, EPOCH_LENGTH).full_value() + SINCE_FLAG
     }
 }

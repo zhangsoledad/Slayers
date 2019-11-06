@@ -5,6 +5,7 @@ pub struct Spec {
     pub timestamp: u64,
     pub compact_target: String,
     pub message: String,
+    pub epoch_length: u64,
     pub issued_cells: Vec<IssuedCell>,
 }
 
