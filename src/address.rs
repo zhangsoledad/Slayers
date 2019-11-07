@@ -3,7 +3,8 @@ use ckb_types::bytes::Bytes;
 use failure::{Error, Fail};
 use std::fmt;
 
-const PREFIX: &str = "ckt";
+const TESTNET_PREFIX: &str = "ckt";
+const MAINNET_PREFIX: &str = "ckb";
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
 pub struct Address {
@@ -27,7 +28,7 @@ impl Address {
     pub fn from_str(input: &str) -> Result<Address, Error> {
         let (hrp, data) = bech32::decode(input)?;
         let data = Vec::<u8>::from_base32(&data)?;
-        if hrp != PREFIX {
+        if hrp != TESTNET_PREFIX && hrp != MAINNET_PREFIX {
             return Err(AddressError(format!("Invalid address hrp: {}", hrp)).into());
         }
         if data.len() == 22 {

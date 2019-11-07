@@ -1,17 +1,18 @@
 use chrono::{
+    naive::NaiveDate,
     offset::{TimeZone, Utc},
     DateTime,
 };
 use ckb_types::core::EpochNumberWithFraction;
-use std::process::exit;
+use failure::Error;
 
 const EPOCH_DURATION: u64 = 4 * 60 * 60;
 const EPOCH_LENGTH: u64 = 1_800;
 const SINCE_FLAG: u64 = 0x2000_0000_0000_0000;
 
-pub fn parse_date(input: &str) -> DateTime<Utc> {
-    Utc.datetime_from_str(input, "%Y-%m-%d")
-        .unwrap_or_else(|_| exit(0))
+pub fn parse_date(input: &str) -> Result<DateTime<Utc>, Error> {
+    let date = NaiveDate::parse_from_str(input, "%Y-%m-%d")?.and_hms(0, 0, 0);
+    Ok(DateTime::from_utc(date, Utc))
 }
 
 pub struct Outset;
@@ -31,12 +32,13 @@ impl Outset {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     #[test]
     fn test_parse_date() {
         let dt = parse_date("2020-01-01");
-        assert_eq!(dt, Utc.ymd(2020, 1, 1).and_hms(0, 0, 0));
+        assert!(dt.is_ok(), "{:?}", dt);
+        assert_eq!(dt.unwrap(), Utc.ymd(2020, 1, 1).and_hms(0, 0, 0));
     }
 }

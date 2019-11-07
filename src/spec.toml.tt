@@ -8,7 +8,6 @@ compact_target = {compact_target }
 uncles_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 nonce = "0x0"
 
-
 [genesis.genesis_cell]
 message = "lina 0x{ message }"
 
@@ -28,6 +27,9 @@ create_type_id = true
 [[genesis.system_cells]]
 file = \{ bundled = "specs/cells/secp256k1_data" }
 create_type_id = false
+[[genesis.system_cells]]
+file = \{ bundled = "specs/cells/secp256k1_blake160_multisig_all" }
+create_type_id = true
 
 [genesis.system_cells_lock]
 code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -35,17 +37,24 @@ args = "0x"
 hash_type = "data"
 
 # Dep group cells
-[genesis.dep_groups]
-secp256k1_blake160_sighash_all = [
+[[genesis.dep_groups]]
+name = "secp256k1_blake160_sighash_all"
+files = [
   \{ bundled = "specs/cells/secp256k1_data" },
   \{ bundled = "specs/cells/secp256k1_blake160_sighash_all" },
+]
+[[genesis.dep_groups]]
+name = "secp256k1_blake160_multisig_all"
+files = [
+  \{ bundled = "specs/cells/secp256k1_data" },
+  \{ bundled = "specs/cells/secp256k1_blake160_multisig_all" },
 ]
 
 # For first 11 block
 [genesis.bootstrap_lock]
 code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 args = "0x"
-hash_type = "type"
+hash_type = "data"
 
 # Burn
 [[genesis.issued_cells]]
@@ -54,13 +63,30 @@ lock.code_hash = "0x000000000000000000000000000000000000000000000000000000000000
 lock.args = "0x62e907b15cbf27d5425399ebf6f0fb50ebb88f18"
 lock.hash_type = "data"
 
-# Locks for developers to run tests
-{{ for issued_cell in issued_cells }}
+{{ for issued_cell in allocate }}
 [[genesis.issued_cells]]
 capacity =  { issued_cell.capacity }
 lock.code_hash = "{ issued_cell.code_hash }"
 lock.args = "{ issued_cell.args }"
-lock.hash_type = "{ issued_cell.hash_type }"
+lock.hash_type = "type"
+{{ endfor }}
+
+# Foundation Reserve: 2%
+{{- if foundation_reserve }}
+[[genesis.issued_cells]]
+capacity =  { foundation_reserve.capacity }
+lock.code_hash = "{ foundation_reserve.code_hash }"
+lock.args = "{ foundation_reserve.args }"
+lock.hash_type = "type"
+{{- endif }}
+
+# Testnet Incentives: 0.5%
+{{ for issued_cell in testnet_incentives }}
+[[genesis.issued_cells]]
+capacity =  { issued_cell.capacity }
+lock.code_hash = "{ issued_cell.code_hash }"
+lock.args = "{ issued_cell.args }"
+lock.hash_type = "type"
 {{ endfor }}
 
 [params]

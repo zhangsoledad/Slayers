@@ -6,7 +6,9 @@ pub struct Spec {
     pub compact_target: String,
     pub message: String,
     pub epoch_length: u64,
-    pub issued_cells: Vec<IssuedCell>,
+    pub allocate: Vec<IssuedCell>,
+    pub foundation_reserve: Option<IssuedCell>,
+    pub testnet_incentives: Vec<IssuedCell>,
 }
 
 #[derive(Debug, Serialize)]
@@ -14,5 +16,4 @@ pub struct IssuedCell {
     pub capacity: u64,
     pub code_hash: String,
     pub args: String,
-    pub hash_type: String,
 }

@@ -12,8 +12,9 @@ serde = "1.0"
 serde_derive = "1.0"
 csv = "1.1"
 failure = "0.1"
-ckb-types = { git = "https://github.com/nervosnetwork/ckb" }
-ckb-jsonrpc-types = { git = "https://github.com/nervosnetwork/ckb" }
+ckb-types = { git = "https://github.com/nervosnetwork/ckb", branch = "develop" }
+ckb-jsonrpc-types = { git = "https://github.com/nervosnetwork/ckb", branch = "develop" }
+ckb-chain-spec = { git = "https://github.com/nervosnetwork/ckb", branch = "develop" }
 bech32 = "0.7.1"
 clap = {version = "2.33.0", features = ["yaml"]}
 reqwest = "0.9"
@@ -23,3 +24,4 @@ faster-hex = "0.4.1"
 indicatif = "0.12.0"
 ckb-rational = { git = "https://github.com/nervosnetwork/ckb" }
 chrono = "0.4.9"
+toml = "0.5"

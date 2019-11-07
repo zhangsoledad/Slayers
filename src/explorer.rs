@@ -17,6 +17,7 @@ use std::process::exit;
 const TOTAL_REWARD: Capacity = capacity_bytes!(18_000_000);
 const THRESHOLD: Capacity = capacity_bytes!(1_000);
 const METRIC_EPOCH: u64 = 4;
+const BYTE_SHANNONS: u64 = 100_000_000;
 
 pub struct Explorer {
     rpc: RpcClient,
@@ -119,11 +120,12 @@ impl Explorer {
             let ratio =
                 RationalU256::new(U256::from(capacity.as_u64()), U256::from(total.as_u64()));
             let total = RationalU256::new(U256::from(TOTAL_REWARD.as_u64()), U256::one());
-            let reward = (total * ratio).into_u256();
+            let reward = (get_low64(&(total * ratio).into_u256()) / BYTE_SHANNONS) * BYTE_SHANNONS;
+
             let entry = map
                 .entry(lock.args().raw_data())
                 .or_insert_with(Capacity::zero);
-            *entry = entry.safe_add(get_low64(&reward))?;
+            *entry = entry.safe_add(reward)?;
         }
 
         let epochs: Vec<_> = (0..METRIC_EPOCH)
