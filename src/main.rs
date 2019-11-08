@@ -144,14 +144,8 @@ fn foundation_reserve(target: u64) -> IssuedCell {
 
     let consensus = spec.build_consensus().unwrap();
 
-    let occupied = consensus
-        .genesis_block()
-        .transactions()
-        .iter()
-        .try_fold(Capacity::zero(), |acc, tx| {
-            tx.outputs_capacity()
-                .and_then(|capacity| acc.safe_add(capacity))
-        })
+    let occupied = consensus.genesis_block().transactions()[0]
+        .outputs_capacity()
         .unwrap();
 
     let foundation_reserve = FOUNDATION_RESERVE.safe_sub(occupied).unwrap();
