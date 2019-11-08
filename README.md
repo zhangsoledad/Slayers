@@ -1,6 +1,7 @@
 # Slayers - CKB Genesis Block Generator
 ![256px-Lina_Inverse_GF](https://user-images.githubusercontent.com/3198439/67932760-79c9a080-fbff-11e9-8b59-fa44e825d45d.png)
 
+
 ```shell
 Lina Inverse - Slayers
 
@@ -21,3 +22,6 @@ OPTIONS:
 Licensed under [MIT License]
 
 [MIT License]: LICENSE-MIT
+
+## References
+[Granblue Fantasy]: [NEWS - グランブルーファンタジー](https://granbluefantasy.jp/pages/?p=6029)
