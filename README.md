@@ -15,3 +15,9 @@ OPTIONS:
     -t, --target <TARGET>    target epoch number
     -u, --url <URL>          ckb node rpc endpoint
 ```
+
+## License
+
+Licensed under [MIT License]
+
+[MIT License]: LICENSE-MIT
