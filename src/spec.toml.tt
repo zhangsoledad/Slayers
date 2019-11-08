@@ -21,15 +21,19 @@ hash_type = "data"
 [[genesis.system_cells]]
 file = \{ bundled = "specs/cells/secp256k1_blake160_sighash_all" }
 create_type_id = true
+capacity = 100_000_0000_0000
 [[genesis.system_cells]]
 file = \{ bundled = "specs/cells/dao" }
 create_type_id = true
+capacity = 16_000_0000_0000
 [[genesis.system_cells]]
 file = \{ bundled = "specs/cells/secp256k1_data" }
 create_type_id = false
+capacity = 1_048_617_0000_0000
 [[genesis.system_cells]]
 file = \{ bundled = "specs/cells/secp256k1_blake160_multisig_all" }
 create_type_id = true
+capacity = 100_000_0000_0000
 
 [genesis.system_cells_lock]
 code_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -65,7 +69,7 @@ lock.hash_type = "data"
 
 {{ for issued_cell in allocate }}
 [[genesis.issued_cells]]
-capacity =  { issued_cell.capacity }
+capacity = { issued_cell.capacity }
 lock.code_hash = "{ issued_cell.code_hash }"
 lock.args = "{ issued_cell.args }"
 lock.hash_type = "type"
@@ -74,7 +78,7 @@ lock.hash_type = "type"
 # Foundation Reserve: 2%
 {{- if foundation_reserve }}
 [[genesis.issued_cells]]
-capacity =  { foundation_reserve.capacity }
+capacity = { foundation_reserve.capacity }
 lock.code_hash = "{ foundation_reserve.code_hash }"
 lock.args = "{ foundation_reserve.args }"
 lock.hash_type = "type"
@@ -83,7 +87,7 @@ lock.hash_type = "type"
 # Testnet Incentives: 0.5%
 {{ for issued_cell in testnet_incentives }}
 [[genesis.issued_cells]]
-capacity =  { issued_cell.capacity }
+capacity = { issued_cell.capacity }
 lock.code_hash = "{ issued_cell.code_hash }"
 lock.args = "{ issued_cell.args }"
 lock.hash_type = "type"

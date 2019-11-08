@@ -15,14 +15,17 @@ use clap::{load_yaml, value_t, App};
 use explorer::Explorer;
 use input::{collect_allocate, parse_mining_competition_record, serialize_multisig_lock_args};
 use std::collections::BTreeMap;
+use std::fs;
 use std::io::BufReader;
 use std::process::exit;
 use template::{IssuedCell, Spec};
 use tinytemplate::TinyTemplate;
 
 static TEMPLATE: &str = include_str!("spec.toml.tt");
-const DEFAULT_CODE_HASH: &str = "0x";
-const MULTISIG_CODE_HASH: &str = "0x";
+const DEFAULT_CODE_HASH: &str =
+    "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8";
+const MULTISIG_CODE_HASH: &str =
+    "0x5c5069eb0857efc65e1bca0c07df34c31663b3622fd3876c876320fc9634e2a8";
 const DEFAULT_TARGET_EPOCH: u64 = 89;
 const MINING_COMPETITION_REWARD: Capacity = capacity_bytes!(168_000_000); // 0.5%
 const FOUNDATION_RESERVE: Capacity = capacity_bytes!(672_000_000); // 2%
@@ -64,7 +67,16 @@ fn main() {
     let mut tt = TinyTemplate::new();
     tt.add_template("lina", TEMPLATE).unwrap();
     let rendered = tt.render("lina", &context).unwrap();
-    println!("{}", rendered);
+
+    let spec: ChainSpec = toml::from_str(&rendered).unwrap();
+    let consensus = spec.build_consensus().unwrap();
+
+    write_file(rendered, format!("0x{:x}", consensus.genesis_block().hash()));
+}
+
+fn write_file<C: AsRef<[u8]>>(spec: C, hash: C) {
+    fs::write("lina.toml", spec).unwrap();
+    fs::write("hash.txt", hash).unwrap();
 }
 
 fn reduce_allocate(target: u64) -> Vec<IssuedCell> {

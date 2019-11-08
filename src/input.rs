@@ -2,6 +2,7 @@ use crate::{
     address::Address,
     date::{parse_date, Outset},
     template::IssuedCell,
+    DEFAULT_CODE_HASH, MULTISIG_CODE_HASH,
 };
 use ckb_types::{bytes::Bytes, core::Capacity};
 use failure::Error;
@@ -12,8 +13,6 @@ use std::io::Read;
 use std::process::exit;
 
 const BYTE_SHANNONS: u64 = 100_000_000;
-const DEFAULT_CODE_HASH: &str = "0x";
-const MULTISIG_CODE_HASH: &str = "0x";
 
 #[derive(Debug, Deserialize)]
 pub struct RawRecord {
@@ -92,6 +91,10 @@ impl TryFrom<RawRecord> for TestnetIncentives {
     }
 }
 
+pub fn blake160(message: &[u8]) -> Bytes {
+    Bytes::from(&ckb_hash::blake2b_256(message)[..20])
+}
+
 pub fn serialize_multisig_lock_args(
     address: &str,
     date: &str,
@@ -100,10 +103,12 @@ pub fn serialize_multisig_lock_args(
     let address = Address::from_str(address)?;
     let dt = parse_date(date)?;
     let since = Outset.since_epoch(&dt, target);
-    let mut args = Bytes::from(vec![0u8, 0, 1, 1]);
-    args.extend(address.args);
+    let mut script = Bytes::from(vec![0u8, 0, 1, 1]);
+    script.extend_from_slice(&address.args);
+    let mut args = blake160(&script).to_vec();
+
     args.extend(since.to_le_bytes().into_iter());
-    Ok(args)
+    Ok(Bytes::from(args))
 }
 
 pub fn convert_record_allocate(record: LockRecord, target: u64) -> Result<Allocate, Error> {
