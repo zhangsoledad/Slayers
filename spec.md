@@ -206,7 +206,7 @@ where | is bytes concatenation
 Multisig script hash is the blake160 of the following message: 
 
 ```
-`S | R | M | N | PubkeyHash`
+S | R | M | N | PubkeyHash
 ```
 
 Where [S/R/M/N](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_multisig_all.c#L43) are four single byte unsigned integers, where S = 0, R = 0, M = 1, N = 1.
