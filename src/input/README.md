@@ -1,4 +1,4 @@
-The CSV file has been signed by the following key
+The CSV files have been signed by the following key
 
 | Unique ID                              | Fingerprint                                        |
 | -------------------------------------- | -------------------------------------------------- |
@@ -11,7 +11,7 @@ gpg --recv-keys 30C4B91C7A85D234
 ```
 
 Once you have already imported the public keys, check
-the signature of the file `genesis_final.csv`
+the signature of the file, such as `genesis_final.csv`
 
 ```
 gpg --verify genesis_final.csv.asc genesis_final.csv
