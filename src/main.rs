@@ -32,6 +32,7 @@ const FOUNDATION_RESERVE: Capacity = capacity_bytes!(672_000_000); // 2%
 const INCENTIVES_ADDRESS: &str = "ckb1qyqy6mtud5sgctjwgg6gydd0ea05mr339lnslczzrc";
 const FOUNDATION_ADDRESS: &str = "ckb1qyqyz340d4nhgtx2s75mp5wnavrsu7j5fcwqktprrp";
 const FOUNDATION_LOCK: &str = "2020-07-01";
+const INITIAL_ISSUES: Capacity = capacity_bytes!(33_600_000_000);
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -71,17 +72,30 @@ fn main() {
     let spec: ChainSpec = toml::from_str(&rendered).unwrap();
     let consensus = spec.build_consensus().unwrap();
 
-    write_file(rendered, format!("0x{:x}", consensus.genesis_block().hash()));
+    let issued = consensus.genesis_block().transactions()[0]
+        .outputs_capacity()
+        .unwrap();
+    assert_eq!(
+        issued, INITIAL_ISSUES,
+        "initial issued must be 33_600_000_000"
+    );
+
+    write_file(
+        rendered,
+        format!("0x{:x}", consensus.genesis_block().hash()),
+    );
 }
 
-fn write_file<C: AsRef<[u8]>>(spec: C, hash: C) {
+fn write_file(spec: String, hash: String) {
     fs::write("lina.toml", spec).unwrap();
+    println!("spec: lina.toml");
+    println!("hash: {}", hash);
     fs::write("hash.txt", hash).unwrap();
 }
 
 fn reduce_allocate(target: u64) -> Vec<IssuedCell> {
-    let test_allocate = include_bytes!("input/test_allocate.csv");
-    let reader = BufReader::new(&test_allocate[..]);
+    let allocate = include_bytes!("input/genesis_final.csv");
+    let reader = BufReader::new(&allocate[..]);
     collect_allocate(reader, target)
 }
 
