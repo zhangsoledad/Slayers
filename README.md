@@ -17,6 +17,8 @@ OPTIONS:
     -u, --url <URL>          ckb node rpc endpoint
 ```
 
+This is an implementation following the [Genesis Block Generator Specification](spec.md).
+
 ## License
 
 Licensed under [MIT License]
