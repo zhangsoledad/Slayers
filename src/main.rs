@@ -14,6 +14,7 @@ use ckb_types::{
 use clap::{load_yaml, value_t, App};
 use explorer::Explorer;
 use input::{collect_allocate, parse_mining_competition_record, serialize_multisig_lock_args};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::BufReader;
@@ -41,6 +42,17 @@ fn main() {
         .value_of("url")
         .unwrap_or_else(|| "http://localhost:8114");
     let target = value_t!(matches, "target", u64).unwrap_or(DEFAULT_TARGET_EPOCH);
+
+    if target < 4 {
+        eprintln!("target epoch must be larger than 3");
+        exit(1);
+    }
+
+    let verbose = matches.is_present("verbose");
+    if verbose {
+        println!("url = {}", url);
+        println!("target = {}", target);
+    }
 
     let foundation_reserve = foundation_reserve(target);
     let allocate = reduce_allocate(target);
@@ -75,22 +87,38 @@ fn main() {
     let issued = consensus.genesis_block().transactions()[0]
         .outputs_capacity()
         .unwrap();
+    if verbose {
+        println!("issued = {}", issued);
+        println!("hash = {:#x}", consensus.genesis_block().hash());
+    }
     assert_eq!(
         issued, INITIAL_ISSUES,
         "initial issued must be 33_600_000_000"
     );
 
-    write_file(
-        rendered,
-        format!("0x{:x}", consensus.genesis_block().hash()),
-    );
+    write_file(rendered);
 }
 
-fn write_file(spec: String, hash: String) {
-    fs::write("lina.toml", spec).unwrap();
-    println!("spec: lina.toml");
-    println!("hash: {}", hash);
-    fs::write("hash.txt", hash).unwrap();
+fn write_file(spec: String) {
+    fs::write("lina.toml", &spec).unwrap();
+    println!("Created spec: lina.toml");
+
+    let sha256sum = {
+        let mut hasher = Sha256::new();
+        hasher.input(spec.as_bytes());
+        hasher.result()
+    };
+    fs::write(
+        "lina.toml.sha256sum",
+        format!("{:#x}  lina.toml\n", sha256sum),
+    )
+    .unwrap();
+    println!("Created checksum: lina.toml.sha256sum");
+    println!("sha256sum of lina.toml: {:#x}", sha256sum);
+
+    println!("\nPlease use the latest ckb release to import the spec and start the node:");
+    println!("     ckb init --import-spec lina.toml --chain mainnet");
+    println!("     ckb run");
 }
 
 fn reduce_allocate(target: u64) -> Vec<IssuedCell> {
