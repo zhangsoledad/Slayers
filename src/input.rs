@@ -39,7 +39,9 @@ pub struct Allocate {
 }
 
 pub fn collect_allocate<R: Read>(reader: R, target: u64) -> Vec<IssuedCell> {
-    let mut rdr = csv::Reader::from_reader(reader);
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(reader);
     rdr.deserialize()
         .filter_map(|record: Result<LockRecord, _>| {
             record
@@ -54,7 +56,7 @@ pub fn collect_allocate<R: Read>(reader: R, target: u64) -> Vec<IssuedCell> {
             } = record;
             IssuedCell {
                 capacity: capacity.as_u64(),
-                code_hash: code_hash,
+                code_hash,
                 args: format!("0x{}", faster_hex::hex_string(&args[..]).unwrap()),
             }
         })
@@ -107,7 +109,7 @@ pub fn serialize_multisig_lock_args(
     script.extend_from_slice(&address.args);
     let mut args = blake160(&script).to_vec();
 
-    args.extend(since.to_le_bytes().into_iter());
+    args.extend(since.to_le_bytes().iter());
     Ok(Bytes::from(args))
 }
 
