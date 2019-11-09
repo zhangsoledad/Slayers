@@ -1,0 +1,86 @@
+language: rust
+rust: 1.38.0
+dist: xenial
+sudo: true
+cache:
+  directories:
+    - $HOME/.cargo
+  timeout: 1024
+
+git:
+  depth: 2
+  submodules: false
+
+env:
+  global:
+    - RUST_BACKTRACE=full
+
+addons:
+  apt:
+    sources:
+      - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
+        key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
+    packages:
+      - libssl-dev
+      - autoconf
+      - flex
+      - bison
+      - texinfo
+      - libtool
+      - clang-8
+      - libc6-dev-i386
+
+before_script:
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ulimit -n 8192; fi
+
+script: cargo build --release
+
+before_cache:
+  - rm -rf $HOME/.cargo/registry
+
+deploy:
+  provider: releases
+  api_key: "$GITHUB_TOKEN"
+  file:
+    - "releases/ckb_slayers_${TRAVIS_TAG}_${REL_PKG}"
+    - "releases/ckb_slayers_${TRAVIS_TAG}_${REL_PKG}.asc"
+  skip_cleanup: true
+  prerelease: true
+  overwrite: true
+  on:
+    tags: true
+    condition: '"$GITHUB_TOKEN" != "" && "$REL_PKG" != ""'
+
+matrix:
+  include:
+    - name: Package for macOS
+      if: 'tag IS present AND env(GITHUB_TOKEN) IS present'
+      os: osx
+      env: REL_PKG=x86_64-apple-darwin.zip
+      script:
+        - cargo build --release
+        - openssl aes-256-cbc -K $encrypted_5d8438e24884_key -iv $encrypted_5d8438e24884_iv -in devtools/ci/travis-secret.asc.enc -out devtools/ci/travis-secret.asc -d
+        - gpg --import devtools/ci/travis-secret.asc
+        - devtools/ci/package.sh target/release/slayers
+    - name: Package for Linux
+      if: 'tag IS present AND env(GITHUB_TOKEN) IS present'
+      language: ruby
+      addons: { apt: { packages: [] } }
+      env: REL_PKG=x86_64-unknown-linux-gnu.tar.gz BUILDER_IMAGE=nervos/ckb-docker-builder:xenial-rust-1.38.0
+      script:
+        - mkdir -p $HOME/.cargo
+        - docker run --rm -it -w /ckb -v $(pwd):/ckb -v $HOME/.cargo:/root/.cargo -e OPENSSL_STATIC=1 -e OPENSSL_LIB_DIR=/usr/local/lib -e OPENSSL_INCLUDE_DIR=/usr/local/include/openssl $BUILDER_IMAGE cargo build --release
+        - openssl aes-256-cbc -K $encrypted_5d8438e24884_key -iv $encrypted_5d8438e24884_iv -in devtools/ci/travis-secret.asc.enc -out devtools/ci/travis-secret.asc -d
+        - gpg --import devtools/ci/travis-secret.asc
+        - devtools/ci/package.sh target/release/slayers
+    - name: Package for Centos
+      if: 'tag IS present AND env(GITHUB_TOKEN) IS present'
+      language: ruby
+      addons: { apt: { packages: [] } }
+      env: REL_PKG=x86_64-unknown-centos-gnu.tar.gz BUILDER_IMAGE=nervos/ckb-docker-builder:centos-7-rust-1.38.0
+      script:
+        - mkdir -p $HOME/.cargo
+        - docker run --rm -it -w /ckb -v $(pwd):/ckb -v $HOME/.cargo:/root/.cargo $BUILDER_IMAGE scl enable llvm-toolset-7 'cargo build --release'
+        - openssl aes-256-cbc -K $encrypted_5d8438e24884_key -iv $encrypted_5d8438e24884_iv -in devtools/ci/travis-secret.asc.enc -out devtools/ci/travis-secret.asc -d
+        - gpg --import devtools/ci/travis-secret.asc
+        - devtools/ci/package.sh target/release/slayers
