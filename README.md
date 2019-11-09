@@ -22,6 +22,8 @@ OPTIONS:
 
 This is an implementation following the [Genesis Block Generator Specification](spec.md).
 
+Embedded CSV files are in [src/input](src/input).
+
 ## License
 
 Licensed under [MIT License]
