@@ -15,7 +15,7 @@ The generator accepts following parameters as input:
 * Promote user to use the following command to setup the configuration files for mainnet.
 
 ```
- ckb init --import-spec /path/to/generated/chain-spec.toml --chain mainnet 
+ckb init --import-spec /path/to/generated/chain-spec.toml --chain mainnet 
 ```
 
 ## How to create chain spec
