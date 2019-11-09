@@ -1,4 +1,7 @@
 # Slayers - CKB Genesis Block Generator
+
+[![version](https://img.shields.io/github/v/release/nervosnetwork/Slayers)](https://github.com/nervosnetwork/Slayers/releases/latest)
+
 ![256px-Lina_Inverse_GF](https://user-images.githubusercontent.com/3198439/67932760-79c9a080-fbff-11e9-8b59-fa44e825d45d.png)
 
 
