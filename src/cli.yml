@@ -1,5 +1,5 @@
 name: Slayers
-version: "v1.0.0"
+version: "v1.0.1"
 author: zhangsoledad <787953403@qq.com>
 about: Lina Inverse - Slayers
 args:
@@ -15,3 +15,7 @@ args:
         value_name: TARGET
         help: target epoch number
         takes_value: true
+    - verbose:
+        long: verbose
+        takes_value: false
+        hidden: true
