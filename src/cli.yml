@@ -19,3 +19,6 @@ args:
         long: verbose
         takes_value: false
         hidden: true
+    - output:
+        short: o
+        help: output mainnet address
