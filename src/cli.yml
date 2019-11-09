@@ -15,6 +15,3 @@ args:
         value_name: TARGET
         help: target epoch number
         takes_value: true
-    - output:
-        short: o
-        help: output mainnet address

@@ -2,7 +2,6 @@ mod address;
 mod date;
 mod explorer;
 mod input;
-mod output;
 mod rpc;
 mod template;
 
@@ -14,15 +13,10 @@ use ckb_types::{
 };
 use clap::{load_yaml, value_t, App};
 use explorer::Explorer;
-use input::{
-    collect_allocate, parse_mining_competition_record, read_allocate,
-    read_mining_competition_record, serialize_multisig_lock_args,
-};
-use output::{write_allocate_output, write_incentives_output};
+use input::{collect_allocate, parse_mining_competition_record, serialize_multisig_lock_args};
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::BufReader;
-use std::path::PathBuf;
 use std::process::exit;
 use template::{IssuedCell, Spec};
 use tinytemplate::TinyTemplate;
@@ -47,19 +41,12 @@ fn main() {
         .value_of("url")
         .unwrap_or_else(|| "http://localhost:8114");
     let target = value_t!(matches, "target", u64).unwrap_or(DEFAULT_TARGET_EPOCH);
-    let output_path = if matches.is_present("output") {
-        let path = ::std::env::current_dir().unwrap().join("output");
-        ::std::fs::create_dir_all(&path).unwrap();
-        Some(path)
-    } else {
-        None
-    };
 
     let foundation_reserve = foundation_reserve(target);
-    let allocate = reduce_allocate(target, &output_path);
+    let allocate = reduce_allocate(target);
 
     let mut records = BTreeMap::new();
-    load_mining_competition_records(&mut records, &output_path);
+    load_mining_competition_records(&mut records);
     let explorer = Explorer::new(url, target);
     let (timestamp, compact_target, message, epoch_length) =
         explorer.collect(&mut records).unwrap_or_else(|e| {
@@ -106,44 +93,66 @@ fn write_file(spec: String, hash: String) {
     fs::write("hash.txt", hash).unwrap();
 }
 
-fn reduce_allocate(target: u64, output_path: &Option<PathBuf>) -> Vec<IssuedCell> {
+fn reduce_allocate(target: u64) -> Vec<IssuedCell> {
     let allocate = include_bytes!("input/genesis_final.csv");
     let reader = BufReader::new(&allocate[..]);
-    let records = read_allocate(reader).unwrap();
-    if let Some(path) = output_path.as_ref() {
-        write_allocate_output(path.join("genesis_final.csv"), records.clone(), target).unwrap();
-    }
-    collect_allocate(records, target)
+    collect_allocate(reader, target)
 }
 
-#[rustfmt::skip]
-fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>, output_path: &Option<PathBuf>) {
-    let prelude = [
-        ("round1.csv",         include_str!("input/round1.csv")),
-        ("round2.epoch.csv",   include_str!("input/round2.epoch.csv")),
-        ("round2.mining.csv",  include_str!("input/round2.mining.csv")),
-        ("round3.epoch.csv",   include_str!("input/round3.epoch.csv")),
-        ("round3.mining.csv",  include_str!("input/round3.mining.csv")),
-        ("round4.csv",         include_str!("input/round4.csv")),
-        ("round5.stage1.csv",  include_str!("input/round5.stage1.csv")),
-        ("round5.stage2.csv",  include_str!("input/round5.stage2.csv")),
-    ];
+fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>) {
+    {
+        let round1 = include_bytes!("input/round1.csv");
+        let reader = BufReader::new(&round1[..]);
+        parse_mining_competition_record(reader, map);
+    }
 
-    for (name, data) in prelude.iter() {
-        let reader = BufReader::new(data.as_bytes());
-        let records = read_mining_competition_record(reader).unwrap();
+    {
+        let round2_epoch = include_bytes!("input/round2.epoch.csv");
+        let reader = BufReader::new(&round2_epoch[..]);
+        parse_mining_competition_record(reader, map);
+    }
 
-        if let Some(path) = output_path.as_ref() {
-            write_incentives_output(path.join(*name), records.clone()).unwrap();
-        }
-        parse_mining_competition_record(records, map).unwrap();
+    {
+        let round2_mininng = include_bytes!("input/round2.mining.csv");
+        let reader = BufReader::new(&round2_mininng[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round3_epoch = include_bytes!("input/round3.epoch.csv");
+        let reader = BufReader::new(&round3_epoch[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round3_mininng = include_bytes!("input/round3.mining.csv");
+        let reader = BufReader::new(&round3_mininng[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round4 = include_bytes!("input/round4.csv");
+        let reader = BufReader::new(&round4[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round5_stage1 = include_bytes!("input/round5.stage1.csv");
+        let reader = BufReader::new(&round5_stage1[..]);
+        parse_mining_competition_record(reader, map);
+    }
+
+    {
+        let round5_stage2 = include_bytes!("input/round5.stage2.csv");
+        let reader = BufReader::new(&round5_stage2[..]);
+        parse_mining_competition_record(reader, map);
     }
 }
 
 fn foundation_reserve(target: u64) -> IssuedCell {
     let dummy = Spec {
         timestamp: 0,
-        compact_target: "0x1c00e904".to_string(),
+        compact_target: "0x1".to_string(),
         message: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
         epoch_length: 1000,
         allocate: vec![],
