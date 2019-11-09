@@ -19,7 +19,13 @@ args:
         long: verbose
         takes_value: false
         hidden: true
+<<<<<<< HEAD
     - compact-target:
         long: compact-target
         takes_value: true
         hidden: true
+=======
+    - output:
+        short: o
+        help: output mainnet address
+>>>>>>> feat: output mainnet address
