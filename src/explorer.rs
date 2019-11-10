@@ -40,13 +40,13 @@ impl Explorer {
         let tip_epoch = tip_header.epoch();
         if (tip_epoch.number() < (self.target + 1)) || tip_epoch.index() < 11 {
             eprintln!("Lina is not ready yet.");
-            exit(0);
+            exit(1);
         }
 
         let next_epoch = self
             .rpc
             .get_epoch_by_number((self.target + 1).into())?
-            .unwrap_or_else(|| exit(0));
+            .unwrap_or_else(|| exit(1));
 
         let next_epoch_start: u64 = next_epoch.start_number.into();
 
@@ -68,7 +68,7 @@ impl Explorer {
                 let block: BlockView = block.into();
                 windows.push_back(block);
             } else {
-                exit(0);
+                exit(1);
             }
         }
 
@@ -78,18 +78,18 @@ impl Explorer {
                 let block: BlockView = block.into();
                 windows.push_back(block);
             } else {
-                exit(0);
+                exit(1);
             }
 
             let hash = self
                 .rpc
                 .get_block_hash(cursor.into())?
-                .unwrap_or_else(|| exit(0));
+                .unwrap_or_else(|| exit(1));
 
             let reward = self
                 .rpc
                 .get_cellbase_output_capacity_details(hash)?
-                .unwrap_or_else(|| exit(0));
+                .unwrap_or_else(|| exit(1));
             let target_lock = CellbaseWitness::from_slice(
                 &windows[0].transactions()[0]
                     .witnesses()
@@ -108,7 +108,7 @@ impl Explorer {
                 windows.pop_front();
             }
         }
-        let chosen_one = windows.pop_front().unwrap_or_else(|| exit(0));
+        let chosen_one = windows.pop_front().unwrap_or_else(|| exit(1));
         rewards.retain(|_, &mut r| r > THRESHOLD);
 
         let total = rewards
@@ -132,8 +132,8 @@ impl Explorer {
             .map(|i| {
                 self.rpc
                     .get_epoch_by_number((self.target - i).into())
-                    .unwrap_or_else(|_| exit(0))
-                    .unwrap_or_else(|| exit(0))
+                    .unwrap_or_else(|_| exit(1))
+                    .unwrap_or_else(|| exit(1))
             })
             .collect();
 
