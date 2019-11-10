@@ -10,8 +10,8 @@ if [ -z "${REL_PKG:-}" ]; then
   fi
 fi
 
-PKG_NAME="ckb_slayers_${TRAVIS_TAG}_${REL_PKG%%.*}"
-ARCHIVE_NAME="ckb_slayers_${TRAVIS_TAG}_${REL_PKG}"
+PKG_NAME="ckb-gbg_${TRAVIS_TAG}_${REL_PKG%%.*}"
+ARCHIVE_NAME="ckb-gbg_${TRAVIS_TAG}_${REL_PKG}"
 
 rm -rf releases
 mkdir releases
