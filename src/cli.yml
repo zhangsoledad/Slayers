@@ -1,5 +1,5 @@
 name: ckb-gbg
-version: "v1.0.1"
+version: "v1.0.2"
 author: zhangsoledad <787953403@qq.com>
 about: CKB Genesis Block Generator
 args:
