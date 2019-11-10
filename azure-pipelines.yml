@@ -18,13 +18,13 @@ jobs:
       - script: cargo build --release
         displayName: Build
       - powershell: |
-          mkdir ckb_slayers_$(Build.SourceBranchName)_x86_64-pc-windows-msvc
-          cp -r target/release/slayers.exe,README.md,spec.md ckb_slayers_$(Build.SourceBranchName)_x86_64-pc-windows-msvc
+          mkdir ckb-gbg_$(Build.SourceBranchName)_x86_64-pc-windows-msvc
+          cp -r target/release/ckb-gbg.exe,README.md,spec.md ckb-gbg_$(Build.SourceBranchName)_x86_64-pc-windows-msvc
         displayName: Prepare archive
       - task: ArchiveFiles@2
         inputs:
-          rootFolderOrFile: 'ckb_slayers_$(Build.SourceBranchName)_x86_64-pc-windows-msvc'
-          archiveFile: '$(Build.ArtifactStagingDirectory)/ckb_slayers_$(Build.SourceBranchName)_x86_64-pc-windows-msvc.zip'
+          rootFolderOrFile: 'ckb-gbg_$(Build.SourceBranchName)_x86_64-pc-windows-msvc'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/ckb-gbg_$(Build.SourceBranchName)_x86_64-pc-windows-msvc.zip'
       - script: choco install -y gpg4win
         displayName: Install GPG4Win
       - task: DownloadSecureFile@1
@@ -36,12 +36,12 @@ jobs:
           echo "##vso[task.setvariable variable=PATH;]%PATH%;%ProgramFiles(x86)%/GnuPG/bin"
         displayName: Setup GPG
       - script: |
-          gpg -u "Nervos Azure Builder <bot@nervos.org>" -ab "$(Build.ArtifactStagingDirectory)/ckb_slayers_$(Build.SourceBranchName)_x86_64-pc-windows-msvc.zip"
+          gpg -u "Nervos Azure Builder <bot@nervos.org>" -ab "$(Build.ArtifactStagingDirectory)/ckb-gbg_$(Build.SourceBranchName)_x86_64-pc-windows-msvc.zip"
         displayName: Sign Archive
       - task: GitHubRelease@0
         inputs:
           gitHubConnection: nervos-bot
-          repositoryName: nervosnetwork/Slayers
+          repositoryName: nervosnetwork/genesis-block-generator
           action: edit
           tag: $(Build.SourceBranchName)
           assets: |

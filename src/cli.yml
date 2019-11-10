@@ -1,7 +1,7 @@
-name: Slayers
+name: ckb-gbg
 version: "v1.0.1"
 author: zhangsoledad <787953403@qq.com>
-about: Lina Inverse - Slayers
+about: CKB Genesis Block Generator
 args:
     - url:
         short: u
