@@ -17,6 +17,7 @@ lazy_static! {
 
 jsonrpc!(pub struct RpcClient {
     pub fn get_block_by_number(&self, _number: BlockNumber) -> Option<BlockView>;
+    pub fn get_header_by_number(&self, _number: EpochNumber) -> Option<HeaderView>;
     pub fn get_block_hash(&self, _number: BlockNumber) -> Option<H256>;
     pub fn get_cellbase_output_capacity_details(&self, _hash: H256) -> Option<BlockReward>;
     pub fn get_tip_header(&self) -> HeaderView;

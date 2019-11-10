@@ -1,4 +1,5 @@
 use crate::rpc::RpcClient;
+use chrono::{prelude::*, Duration};
 use ckb_rational::RationalU256;
 use ckb_types::{
     bytes::Bytes,
@@ -39,7 +40,7 @@ impl Explorer {
         let tip_header: HeaderView = self.rpc.get_tip_header()?.into();
         let tip_epoch = tip_header.epoch();
         if (tip_epoch.number() < (self.target + 1)) || tip_epoch.index() < 11 {
-            eprintln!("Lina is not ready yet.");
+            self.estimate_launch_time(tip_header)?;
             exit(1);
         }
 
@@ -155,6 +156,58 @@ impl Explorer {
             chosen_one.hash(),
             epochs[0].length.into(),
         ))
+    }
+
+    pub fn estimate_launch_time(&self, tip_header: HeaderView) -> Result<(), Error> {
+        let now = Local::now();
+        let tip_epoch = tip_header.epoch();
+
+        let avg_epoch_duration = if tip_epoch.number() < METRIC_EPOCH {
+            4 * 3600
+        } else {
+            // get average elapsed time in the last four full epochs
+            let first_epoch = self
+                .rpc
+                .get_epoch_by_number((tip_epoch.number() - METRIC_EPOCH).into())
+                .unwrap_or_else(|_| exit(1))
+                .unwrap_or_else(|| exit(1));
+            let first_block = self
+                .rpc
+                .get_header_by_number(first_epoch.start_number.into())?
+                .unwrap_or_else(|| exit(1));
+            let last_block = self
+                .rpc
+                .get_header_by_number(
+                    (Into::<u64>::into(tip_header.number()) - tip_epoch.index()).into(),
+                )?
+                .unwrap_or_else(|| exit(1));
+            let t1: u64 = first_block.inner.timestamp.into();
+            let t2: u64 = last_block.inner.timestamp.into();
+            (t2 - t1) / METRIC_EPOCH / 1000
+        };
+
+        let remaining_seconds = (self.target - tip_epoch.number()) * avg_epoch_duration
+            + avg_epoch_duration * (tip_epoch.length() - tip_epoch.index() + 11)
+                / tip_epoch.length();
+        let remaining_duration = Duration::seconds(remaining_seconds as i64);
+
+        println!(
+            "Lina is not ready yet. Please wait for the 11st block in epoch {}.",
+            self.target + 1
+        );
+        print!("Estimated remaining time: ");
+        if remaining_seconds > 86400 {
+            print!("{} days ", remaining_seconds / 86400)
+        }
+        println!(
+            "{:02}h{:02}m{:02}s",
+            remaining_seconds / 3600 % 24,
+            remaining_seconds / 60 % 60,
+            remaining_seconds % 60
+        );
+        println!("Estimated launch time: {}", now + remaining_duration);
+
+        Ok(())
     }
 }
 
