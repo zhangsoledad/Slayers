@@ -180,7 +180,7 @@ fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>) {
 fn foundation_reserve(target: u64) -> IssuedCell {
     let dummy = Spec {
         timestamp: 0,
-        compact_target: "0x1".to_string(),
+        compact_target: "0x20ffffff".to_string(),
         message: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
         epoch_length: 1000,
         allocate: vec![],
