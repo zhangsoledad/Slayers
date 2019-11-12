@@ -67,6 +67,12 @@ impl Address {
         }
     }
 
+    pub fn testnet_short_format(&self) -> Result<String, Error> {
+        let mut payload = vec![1u8, 0];
+        payload.extend_from_slice(&self.args);
+        bech32::encode(TESTNET_PREFIX, payload.to_base32()).map_err(Into::into)
+    }
+
     pub fn mainnet_short_format(&self) -> Result<String, Error> {
         let mut payload = vec![1u8, 0];
         payload.extend_from_slice(&self.args);
@@ -84,6 +90,12 @@ mod tests {
         assert_eq!(
             &address.mainnet_short_format().unwrap(),
             "ckb1qyq9xcl8cg8supmzzy0szazepu89832xq2ts070xnk"
-        )
+        );
+
+        let address = Address::from_str("ckb1qyq9xcl8cg8supmzzy0szazepu89832xq2ts070xnk").unwrap();
+        assert_eq!(
+            &address.testnet_short_format().unwrap(),
+            "ckt1qyq9xcl8cg8supmzzy0szazepu89832xq2tsjm3el2"
+        );
     }
 }

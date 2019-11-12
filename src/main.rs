@@ -21,9 +21,8 @@ use input::{
 use output::{write_allocate_output, write_incentives_output};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use std::fs;
+use std::fs::{self, File};
 use std::io::BufReader;
-use std::path::PathBuf;
 use std::process::exit;
 use template::{IssuedCell, Spec};
 use tinytemplate::TinyTemplate;
@@ -48,13 +47,13 @@ fn main() {
         .value_of("url")
         .unwrap_or_else(|| "http://localhost:8114");
     let target = value_t!(matches, "target", u64).unwrap_or(DEFAULT_TARGET_EPOCH);
-    let output_path = if matches.is_present("output") {
-        let path = ::std::env::current_dir().unwrap().join("output");
-        ::std::fs::create_dir_all(&path).unwrap();
-        Some(path)
-    } else {
-        None
-    };
+
+    let mut output = matches.value_of("output").map(|path| {
+        csv::Writer::from_path(path).unwrap_or_else(|e| {
+            eprintln!("create output file failed {}", e);
+            exit(1);
+        })
+    });
 
     if target < 4 {
         eprintln!("target epoch must be larger than 3");
@@ -68,13 +67,14 @@ fn main() {
     }
 
     let foundation_reserve = foundation_reserve(target);
-    let allocate = reduce_allocate(target, &output_path);
+    let allocate = reduce_allocate(target, &mut output);
 
     let mut records = BTreeMap::new();
-    load_mining_competition_records(&mut records, &output_path);
+    load_mining_competition_records(&mut records, &mut output);
     let explorer = Explorer::new(url, target);
-    let (timestamp, compact_target, message, epoch_length) =
-        explorer.collect(&mut records).unwrap_or_else(|e| {
+    let (timestamp, compact_target, message, epoch_length) = explorer
+        .collect(&mut records, &mut output)
+        .unwrap_or_else(|e| {
             eprintln!("explorer error: {}", e);
             exit(1);
         });
@@ -112,6 +112,13 @@ fn main() {
         "initial issued must be 33_600_000_000"
     );
 
+    if let Some(wtr) = output.as_mut() {
+        wtr.flush().unwrap_or_else(|e| {
+            eprintln!("output flush: {}", e);
+            exit(1);
+        });
+    }
+
     write_file(rendered);
 }
 
@@ -137,18 +144,19 @@ fn write_file(spec: String) {
     println!("     ckb run");
 }
 
-fn reduce_allocate(target: u64, output_path: &Option<PathBuf>) -> Vec<IssuedCell> {
+fn reduce_allocate(target: u64, output: &mut Option<csv::Writer<File>>) -> Vec<IssuedCell> {
     let allocate = include_bytes!("input/genesis_final.csv");
     let reader = BufReader::new(&allocate[..]);
     let records = read_allocate(reader).unwrap();
-    if let Some(path) = output_path.as_ref() {
-        write_allocate_output(path.join("genesis_final.csv"), records.clone(), target).unwrap();
+
+    if let Some(wtr) = output.as_mut() {
+        write_allocate_output(wtr, records.clone(), target).unwrap();
     }
     collect_allocate(records, target)
 }
 
 #[rustfmt::skip]
-fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>, output_path: &Option<PathBuf>) {
+fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>, output: &mut Option<csv::Writer<File>>) {
     let prelude = [
         ("round1.csv",         include_str!("input/round1.csv")),
         ("round2.epoch.csv",   include_str!("input/round2.epoch.csv")),
@@ -164,8 +172,9 @@ fn load_mining_competition_records(map: &mut BTreeMap<Bytes, Capacity>, output_p
         let reader = BufReader::new(data.as_bytes());
         let records = read_mining_competition_record(reader).unwrap();
 
-        if let Some(path) = output_path.as_ref() {
-            write_incentives_output(path.join(*name), records.clone()).unwrap();
+        if let Some(wtr) = output.as_mut() {
+            wtr.write_record(&[format!("#{}", name).as_bytes(), &[], &[],&[],&[],&[]]).unwrap();
+            write_incentives_output(wtr, records.clone()).unwrap();
         }
         parse_mining_competition_record(records, map).unwrap();
     }

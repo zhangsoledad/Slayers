@@ -1,26 +1,21 @@
 use crate::address::{Address, MAINNET_PREFIX};
 use crate::input::{serialize_multisig_lock_args, LockRecord, RawRecord};
-use crate::MULTISIG_CODE_HASH;
+use crate::{DEFAULT_CODE_HASH, MULTISIG_CODE_HASH};
 use bech32::{self, ToBase32};
 use ckb_types::{bytes::Bytes, H256};
 use failure::Error;
 use serde_derive::Serialize;
 use std::convert::{TryFrom, TryInto};
-use std::path::Path;
+use std::fs::File;
 use std::str::FromStr;
 
 #[derive(Debug, Serialize)]
 pub struct Output {
     pub address: String,
     pub capacity: u64,
-    pub mainnet_address: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct LockOutput {
-    pub address: String,
-    pub capacity: u64,
     pub lock: Option<String>,
+    pub code_hash: String,
+    pub args: String,
     pub mainnet_address: String,
 }
 
@@ -33,6 +28,12 @@ impl TryFrom<RawRecord> for Output {
         Ok(Output {
             address,
             capacity,
+            lock: None,
+            code_hash: DEFAULT_CODE_HASH.to_string(),
+            args: format!(
+                "0x{}",
+                faster_hex::hex_string(&decode_address.args[..]).unwrap()
+            ),
             mainnet_address: decode_address.mainnet_short_format()?,
         })
     }
@@ -45,7 +46,7 @@ fn full_payload_format(args: Bytes) -> Result<String, Error> {
     bech32::encode(MAINNET_PREFIX, payload.to_base32()).map_err(Into::into)
 }
 
-fn convert_lock_output(record: LockRecord, target: u64) -> Result<LockOutput, Error> {
+fn convert_lock_output(record: LockRecord, target: u64) -> Result<Output, Error> {
     let LockRecord {
         address,
         capacity,
@@ -54,31 +55,36 @@ fn convert_lock_output(record: LockRecord, target: u64) -> Result<LockOutput, Er
 
     if let Some(ref date) = &lock {
         let args = serialize_multisig_lock_args(&address, date, target)?;
-        let mainnet_address = full_payload_format(args)?;
-        Ok(LockOutput {
+        let mainnet_address = full_payload_format(args.clone())?;
+        Ok(Output {
             address,
             capacity,
             lock,
+            code_hash: MULTISIG_CODE_HASH.to_string(),
+            args: format!("0x{}", faster_hex::hex_string(&args[..]).unwrap()),
             mainnet_address,
         })
     } else {
         let decode_address = Address::from_str(&address)?;
 
-        Ok(LockOutput {
+        Ok(Output {
             address,
             capacity,
             lock,
+            code_hash: DEFAULT_CODE_HASH.to_string(),
+            args: format!(
+                "0x{}",
+                faster_hex::hex_string(&decode_address.args[..]).unwrap()
+            ),
             mainnet_address: decode_address.mainnet_short_format()?,
         })
     }
 }
 
-pub fn write_incentives_output<P: AsRef<Path>, R: IntoIterator<Item = RawRecord>>(
-    path: P,
+pub fn write_incentives_output<R: IntoIterator<Item = RawRecord>>(
+    wtr: &mut csv::Writer<File>,
     records: R,
 ) -> Result<(), Error> {
-    let mut wtr = csv::Writer::from_path(path)?;
-
     for record in records
         .into_iter()
         .filter_map(|record| TryInto::<Output>::try_into(record).ok())
@@ -88,13 +94,11 @@ pub fn write_incentives_output<P: AsRef<Path>, R: IntoIterator<Item = RawRecord>
     Ok(())
 }
 
-pub fn write_allocate_output<P: AsRef<Path>, R: IntoIterator<Item = LockRecord>>(
-    path: P,
+pub fn write_allocate_output<R: IntoIterator<Item = LockRecord>>(
+    wtr: &mut csv::Writer<File>,
     records: R,
     target: u64,
 ) -> Result<(), Error> {
-    let mut wtr = csv::Writer::from_path(path)?;
-
     for record in records
         .into_iter()
         .filter_map(|record| convert_lock_output(record, target).ok())
