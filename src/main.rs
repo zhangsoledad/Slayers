@@ -69,7 +69,10 @@ fn main() {
 
     let context = Spec {
         timestamp,
-        compact_target: format!("0x{:x}", compact_target),
+        compact_target: matches
+            .value_of("compact-target")
+            .map(String::from)
+            .unwrap_or_else(|| format!("0x{:x}", compact_target)),
         message: format!("{:x}", message),
         epoch_length,
         allocate,
